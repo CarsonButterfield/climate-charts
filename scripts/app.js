@@ -27,11 +27,9 @@ fetch('https://datas.carbonmonitor.org/API/downloadFullDataset.php?source=carbon
                         }
                     }
                 })
-                for(state in sortedCarbonData){
-                    stateCount++
-                    generateStateChart(state)
-                }
-                console.log(stateCount)
+               for(let state in sortedCarbonData){
+                   generateStateChart(state)
+               }
             }
         })
        
@@ -43,6 +41,18 @@ fetch('https://datas.carbonmonitor.org/API/downloadFullDataset.php?source=carbon
 
 
 const generateStateChart = (state) => {
+    const dataSeries = []
+    for(field in sortedCarbonData[state]){
+        dataSeries.push({
+            name: field,
+            data: sortedCarbonData[state][field].map(datum => {
+                const dateArr = datum.date.split('/')
+                const newDate = `${dateArr[1]}/${dateArr[0]}/${dateArr[2]}`
+                return {y:datum.value, x:new Date(newDate).getTime()}
+            })
+        })
+        console.log(dataSeries)
+    }
     $('body').append(`<figure class="highcharts-figure"> <div id="${state}"></div></figure>`)
     Highcharts.chart(`${state}`, {
 
@@ -61,6 +71,10 @@ const generateStateChart = (state) => {
         },
     
         xAxis: {
+            type: 'datetime',
+            labels: {
+                format: '{value:%Y-%b-%e}'
+              },
             accessibility: {
                 rangeDescription: 'Range: 2010 to 2017'
             }
@@ -80,32 +94,7 @@ const generateStateChart = (state) => {
             }
         },
     
-        series: [{
-            name: 'Power',
-            data: sortedCarbonData[state].Power.map(datum => {
-                return datum.value
-            })
-        }, {
-            name: 'Industry',
-            data: sortedCarbonData[state].Industry.map(datum => {
-                return datum.value
-            })
-        }, {
-            name: 'Domestic Aviation',
-            data: sortedCarbonData[state]["Domestic Aviation"].map(datum => {
-                return datum.value
-            })
-        }, {
-            name: 'Ground Transport',
-            data: sortedCarbonData[state]["Ground Transport"].map(datum => {
-                return datum.value
-            })
-        }, {
-            name: 'Residential',
-            data: sortedCarbonData[state]["Residential"].map(datum => {
-                return datum.value
-            })
-        }],
+        series: dataSeries,
     
         responsive: {
             rules: [{
